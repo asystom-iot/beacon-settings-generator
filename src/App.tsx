@@ -10,13 +10,13 @@ const { Header, Content, Footer } = Layout;
 const items: TabsProps['items'] = [
   {
     key: '1',
-    label: 'ADVANCED SETTINGS',
-    children: <SectionAdvancedSettings />,
+    label: 'SCHEDULING SETTINGS',
+    children: <SectionSchedulingSettings />,
   },
   {
     key: '2',
-    label: 'ACTIVATION AND SCHEDULING SETTINGS',
-    children: <SectionSchedulingSettings />,
+    label: 'ADVANCED SETTINGS',
+    children: <SectionAdvancedSettings />,
   },
 ];
 

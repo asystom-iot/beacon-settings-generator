@@ -1,12 +1,11 @@
 import * as React from 'react';
-import { Select, Form, Button, Flex, Space, Modal, Drawer } from 'antd';
+import { Select, Form, Button, Flex, Space, Modal, Drawer, Typography } from 'antd';
 
 import {
   SubSectionCustomSpectrogram,
   SubSectionSyncModes,
   SubSectionRpmSettings,
   SubSectionRadio,
-  CopyClipboard,
 } from '../../components';
 import { useAdvancedSettingsDefault } from '../../hooks/useSettingsDefault';
 import { AdvancedSettingsFormDTO } from '../../models/form';
@@ -129,7 +128,10 @@ export const SectionAdvancedSettings: React.FunctionComponent = () => {
                   {/* Synchronization modes  */}
                   <SubSectionSyncModes form={form} />
                   {/* Section radio  */}
-                  <SubSectionRadio defaultValues={defaultValues} />
+                  <SubSectionRadio
+                    defaultValues={defaultValues}
+                    form={form}
+                  />
                 </div>
               </Flex>
               {/*  Submit & Reset */}
@@ -164,7 +166,9 @@ export const SectionAdvancedSettings: React.FunctionComponent = () => {
                     Close modal
                   </Button>,
                 ]}>
-                <CopyClipboard hexString={`${hexString}:${OP_CODES.RX_PRV_SETTINGS_UPDATE}`} />
+                <Typography.Title
+                  level={5}
+                  copyable>{`${hexString}:${OP_CODES.RX_PRV_SETTINGS_UPDATE}`}</Typography.Title>
               </Modal>
             </Flex>
           </Flex>

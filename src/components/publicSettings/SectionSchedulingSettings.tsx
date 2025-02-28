@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, Flex, Form, Modal } from 'antd';
+import { Button, Flex, Form, Modal, Typography } from 'antd';
 import { GlobalPublicSettingsFormDTO, PublicFormDTO } from '../../models/form';
 import {
   scheduling_settings_model,
@@ -13,7 +13,7 @@ import {
   OP_CODES,
   PUBLIC_SETTINGS_DEFAULT_VALUE,
 } from '../../utils';
-import { SubSectionActivation, SubSectionScheduling, CopyClipboard } from '../../components';
+import { SubSectionActivation, SubSectionScheduling } from '../../components';
 import '../section.css';
 
 export const SectionSchedulingSettings = () => {
@@ -137,10 +137,13 @@ export const SectionSchedulingSettings = () => {
             style={{ width: '100%' }}>
             <Flex vertical>
               <div style={{ flex: 1, padding: '16px', minWidth: '500px' }}>
-                {/* Activation */}
-                <SubSectionActivation defaultValues={defaultValues} />
-                {/* Activation */}
+                {/* Scheduling */}
                 <SubSectionScheduling form={form} />
+                {/* Activation */}
+                <SubSectionActivation
+                  defaultValues={defaultValues}
+                  form={form}
+                />
               </div>
             </Flex>
             {/*  Submit & Reset */}
@@ -175,7 +178,9 @@ export const SectionSchedulingSettings = () => {
                   Close modal
                 </Button>,
               ]}>
-              <CopyClipboard hexString={`${hexString}:${OP_CODES.RX_PUB_SETTINGS_UPDATE}`} />
+              <Typography.Title
+                level={5}
+                copyable>{`${hexString}:${OP_CODES.RX_PUB_SETTINGS_UPDATE}`}</Typography.Title>
             </Modal>
           </Flex>
         </Form>

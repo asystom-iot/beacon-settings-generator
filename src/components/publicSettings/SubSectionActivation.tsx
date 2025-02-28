@@ -1,14 +1,16 @@
 import * as React from 'react';
-import { Divider, Form, Switch, theme } from 'antd';
+import { Divider, Form, FormInstance, Switch, theme } from 'antd';
 import { GlobalPublicSettingsFormDTO } from '../../models/form';
 import { ActivationExplanation } from '../explanations/ActivationExplanation';
 
 interface SubSectionActivationProps {
   defaultValues: GlobalPublicSettingsFormDTO;
+  form: FormInstance<GlobalPublicSettingsFormDTO>;
 }
 
 export const SubSectionActivation: React.FunctionComponent<SubSectionActivationProps> = ({
   defaultValues,
+  form,
 }) => {
   const {
     token: { colorBgLayout },
@@ -31,6 +33,7 @@ export const SubSectionActivation: React.FunctionComponent<SubSectionActivationP
             <Switch
               id={'humidity'}
               defaultChecked={defaultValues.Humidity.enabled}
+              onChange={(checked) => form.setFieldsValue({ Humidity: { enabled: checked } })}
             />
           </Form.Item>
           <Form.Item
@@ -41,46 +44,7 @@ export const SubSectionActivation: React.FunctionComponent<SubSectionActivationP
             <Switch
               id={'temperature'}
               defaultChecked={defaultValues.Temperature.enabled}
-            />
-          </Form.Item>
-          <Form.Item
-            label={'Machine Drift'}
-            htmlFor={'machineDrift'}
-            name='MachineDrift.enabled'
-            labelCol={{ span: 18 }}>
-            <Switch
-              id={'machineDrift'}
-              defaultChecked={defaultValues.MachineDrift.enabled}
-            />
-          </Form.Item>
-          <Form.Item
-            label={'PT100'}
-            htmlFor={'pt100'}
-            name='Pt100.enabled'
-            labelCol={{ span: 18 }}>
-            <Switch
-              id={'pt100'}
-              defaultChecked={defaultValues.Pt100.enabled}
-            />
-          </Form.Item>
-          <Form.Item
-            label={'TC'}
-            htmlFor={'tc'}
-            name='TC.enabled'
-            labelCol={{ span: 18 }}>
-            <Switch
-              id={'tc'}
-              defaultChecked={defaultValues.TC.enabled}
-            />
-          </Form.Item>
-          <Form.Item
-            label={'Current Loop'}
-            htmlFor={'currentLoop'}
-            name='CurrentLoop.enabled'
-            labelCol={{ span: 18 }}>
-            <Switch
-              id={'currentLoop'}
-              defaultChecked={defaultValues.CurrentLoop.enabled}
+              onChange={(checked) => form.setFieldsValue({ Temperature: { enabled: checked } })}
             />
           </Form.Item>
         </div>
