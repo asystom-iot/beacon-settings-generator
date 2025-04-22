@@ -2,6 +2,7 @@
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 It enables the generation of downlinks for Advanced and Scheduling / Activation settings.
+The app is deployed [here](https://asystom-iot.github.io/beacon-settings-generator/).
 
 ![Alt text](./screenshot-settings-generator.png)
 
