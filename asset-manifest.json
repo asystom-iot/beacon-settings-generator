@@ -1,14 +1,14 @@
 {
   "files": {
     "main.css": "/beacon-settings-generator/static/css/main.524381d2.css",
-    "main.js": "/beacon-settings-generator/static/js/main.28e7315f.js",
+    "main.js": "/beacon-settings-generator/static/js/main.60059c03.js",
     "static/media/asystom_grafana_icon.png": "/beacon-settings-generator/static/media/asystom_grafana_icon.da781ec274e701c4cfac.png",
     "index.html": "/beacon-settings-generator/index.html",
     "main.524381d2.css.map": "/beacon-settings-generator/static/css/main.524381d2.css.map",
-    "main.28e7315f.js.map": "/beacon-settings-generator/static/js/main.28e7315f.js.map"
+    "main.60059c03.js.map": "/beacon-settings-generator/static/js/main.60059c03.js.map"
   },
   "entrypoints": [
     "static/css/main.524381d2.css",
-    "static/js/main.28e7315f.js"
+    "static/js/main.60059c03.js"
   ]
 }
