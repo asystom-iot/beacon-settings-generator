@@ -1,3 +1,4 @@
+export * from './DecodedSettingsTable';
 export * from './advancedSettings/SectionAdvancedSettings';
 export * from './advancedSettings/SubSectionCustomSpectrogram';
 export * from './advancedSettings/SubSectionRadio';

@@ -1,4 +1,12 @@
-import { Orientation, SensorType, AdvancedSettingsFormDTO, WoeMode } from '../models/form';
+import {
+  Orientation,
+  SensorType,
+  AdvancedSettingsFormDTO,
+  GlobalPublicSettingsFormDTO,
+  IndicatorProps,
+  PublicFormDTO,
+  WoeMode,
+} from '../models/form';
 import {
   FLAG_MODE_WOA,
   FLAG_MODE_WOC,
@@ -6,10 +14,15 @@ import {
   FLAG_MODE_WOS,
   private_settings_model,
   radio_model,
+  scheduling_settings_model,
+  settingsIndicators,
+  SI_ORDERED,
+  SIOrderedKeys,
   WOE_AVAIL_MODES,
   woe_modes_model,
   WOE_POWER_PROFILES,
 } from '../models/settings';
+import { OP_CODES, PRIVATE_SETTINGS_LENGTH, PUBLIC_SETTINGS_LENGTH } from './constants';
 
 const getAvailableFlagMode = (woeMode: WoeMode): string[] => {
   switch (woeMode) {
@@ -177,4 +190,138 @@ export const decodeToUint32 = (value: string) => {
 
   console.log('error while decoding settings');
   return 0;
+};
+
+/** PUBLIC SETTINGS / Decode ambient, prediction & introspection periodicities */
+export const decodePublicSettings = (settingsValue: string): PublicFormDTO => {
+  // the first 4B (8 chars) are the activation bitmask, decoded separately via decodeActivationBitMask
+  const values = settingsValue.substring(8, settingsValue.length);
+  let i = 0;
+  let publicSettings: PublicFormDTO = {
+    ambient_periodicity: 0,
+    ambient_hours: 0,
+    ambient_minutes: 0,
+    ambient_seconds: 0,
+    prediction_periodicity: 0,
+    prediction_hours: 0,
+    prediction_minutes: 0,
+    prediction_seconds: 0,
+    introspection_periodicity: 0,
+    introspection_hours: 0,
+    introspection_minutes: 0,
+    introspection_seconds: 0,
+  };
+
+  for (const [publicSetting] of Object.entries(scheduling_settings_model)) {
+    const tmp = decodeToUint32(values.substring(i, i + 4));
+    i += 4;
+    let SEC_OVERHEAD = tmp % 6;
+    if (publicSetting === 'introspection') {
+      SEC_OVERHEAD = 0;
+    }
+
+    publicSettings[`${publicSetting}_periodicity` as keyof PublicFormDTO] = tmp - SEC_OVERHEAD;
+    const s = publicSettings[`${publicSetting}_periodicity` as keyof PublicFormDTO] * 10;
+    const r = s % 3600;
+    publicSettings[`${publicSetting}_hours` as keyof PublicFormDTO] = Math.floor((s - r) / 3600);
+    publicSettings[`${publicSetting}_seconds` as keyof PublicFormDTO] = r % 60;
+    publicSettings[`${publicSetting}_minutes` as keyof PublicFormDTO] = Math.floor(
+      (r - publicSettings[`${publicSetting}_seconds` as keyof PublicFormDTO]) / 60
+    );
+  }
+  return publicSettings;
+};
+
+/** PUBLIC SETTINGS / Decode activation bitmask into indicator toggles */
+export const decodeActivationBitMask = (bmask: number): IndicatorProps => {
+  const decodedSettingsIndicators = {
+    ...settingsIndicators,
+  };
+  for (const elt of SI_ORDERED) {
+    decodedSettingsIndicators[elt as SIOrderedKeys].enabled =
+      bmask & (1 << settingsIndicators[elt as SIOrderedKeys].bitPos) ? true : false;
+  }
+  return decodedSettingsIndicators as unknown as IndicatorProps;
+};
+
+/** Strip an optional trailing `:fPort` from a hex string and validate the remaining payload */
+export interface ParsedHexInput {
+  payload: string;
+  fPort?: number;
+}
+
+export const parseHexInput = (raw: string): ParsedHexInput => {
+  const trimmed = raw.trim();
+  const separatorIndex = trimmed.indexOf(':');
+  const payload = (
+    separatorIndex === -1 ? trimmed : trimmed.substring(0, separatorIndex)
+  ).toLowerCase();
+  const fPortPart = separatorIndex === -1 ? undefined : trimmed.substring(separatorIndex + 1);
+
+  if (!payload) {
+    throw new Error('Please enter a hex string.');
+  }
+  if (!/^[0-9a-f]+$/.test(payload) || payload.length % 2 !== 0) {
+    throw new Error('The hex string must contain an even number of hexadecimal characters (0-9, a-f).');
+  }
+  if (fPortPart === undefined || fPortPart === '') {
+    return { payload };
+  }
+  const fPort = Number(fPortPart);
+  if (!Number.isInteger(fPort) || fPort < 0) {
+    throw new Error(`"${fPortPart}" is not a valid fPort.`);
+  }
+  return { payload, fPort };
+};
+
+const ADVANCED_SETTINGS_OP_CODES: number[] = [
+  OP_CODES.RX_PRV_SETTINGS_UPDATE,
+  OP_CODES.RX_PRV_SETTINGS_UPDATE_CLIENT_LOCK,
+];
+
+const SCHEDULING_SETTINGS_OP_CODES: number[] = [
+  OP_CODES.RX_PUB_SETTINGS_UPDATE,
+  OP_CODES.RX_PUB_SETTINGS_UPDATE_CLIENT_LOCK,
+];
+
+/** Decode a full advanced (private) settings hex string, optionally suffixed with `:fPort` */
+export const decodeAdvancedSettingsValue = (raw: string): AdvancedSettingsFormDTO => {
+  const { payload, fPort } = parseHexInput(raw);
+
+  if (payload.length !== PRIVATE_SETTINGS_LENGTH) {
+    throw new Error(
+      `Expected a ${PRIVATE_SETTINGS_LENGTH}-character hex payload for advanced settings, got ${payload.length}.`
+    );
+  }
+  if (fPort !== undefined && !ADVANCED_SETTINGS_OP_CODES.includes(fPort)) {
+    throw new Error(`fPort ${fPort} does not correspond to an advanced settings update.`);
+  }
+
+  return {
+    ...decodeSensorPrivateSettings(payload),
+    ...decodeBasicSettings(payload.substring(8)),
+    ...decodeWoe(payload.substring(48)),
+    ...decodeRadio(payload.substring(64)),
+  } as AdvancedSettingsFormDTO;
+};
+
+/** Decode a full public (scheduling & activation) settings hex string, optionally suffixed with `:fPort` */
+export const decodePublicSettingsValue = (raw: string): GlobalPublicSettingsFormDTO => {
+  const { payload, fPort } = parseHexInput(raw);
+
+  if (payload.length !== PUBLIC_SETTINGS_LENGTH) {
+    throw new Error(
+      `Expected a ${PUBLIC_SETTINGS_LENGTH}-character hex payload for scheduling settings, got ${payload.length}.`
+    );
+  }
+  if (fPort !== undefined && !SCHEDULING_SETTINGS_OP_CODES.includes(fPort)) {
+    throw new Error(`fPort ${fPort} does not correspond to a scheduling settings update.`);
+  }
+
+  const activationBmask = decodeToUint32(payload.substring(0, 8));
+
+  return {
+    ...decodePublicSettings(payload),
+    ...decodeActivationBitMask(activationBmask),
+  } as GlobalPublicSettingsFormDTO;
 };
