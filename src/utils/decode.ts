@@ -215,12 +215,7 @@ export const decodePublicSettings = (settingsValue: string): PublicFormDTO => {
   for (const [publicSetting] of Object.entries(scheduling_settings_model)) {
     const tmp = decodeToUint32(values.substring(i, i + 4));
     i += 4;
-    let SEC_OVERHEAD = tmp % 6;
-    if (publicSetting === 'introspection') {
-      SEC_OVERHEAD = 0;
-    }
-
-    publicSettings[`${publicSetting}_periodicity` as keyof PublicFormDTO] = tmp - SEC_OVERHEAD;
+    publicSettings[`${publicSetting}_periodicity` as keyof PublicFormDTO] = tmp;
     const s = publicSettings[`${publicSetting}_periodicity` as keyof PublicFormDTO] * 10;
     const r = s % 3600;
     publicSettings[`${publicSetting}_hours` as keyof PublicFormDTO] = Math.floor((s - r) / 3600);
